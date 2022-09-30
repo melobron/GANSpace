@@ -1,7 +1,8 @@
 import torch
 import torchvision.transforms as transforms
 from torchvision.utils import save_image
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA, IncrementalPCA
+import fbpca
 
 import os
 import argparse
@@ -27,6 +28,16 @@ def get_mean_style(generator, device, style_mean_num):
 
     mean_style /= style_mean_num
     return mean_style
+
+
+@torch.no_grad()
+def generate(seed, generator):
+    # Random Seeds
+    torch.manual_seed(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+
+    #
 
 
 
@@ -89,14 +100,18 @@ if __name__ == "__main__":
     # PCA
     styles = styles.detach().cpu()  # (B, D) = (16384, 512)
     transformer = PCA(n_components=opt.n_components, svd_solver='full')
+    # transformer = IncrementalPCA(n_components=opt.n_components)
     transformer.fit(X=styles)
 
     components = transformer.components_  # (P, D) = (100, 512)
     variances = transformer.explained_variance_  # (P, 1) = (100, 1)
+    # styles = styles.numpy()
+    # _, _, pickle_data = fbpca.pca(styles, k=opt.n_components, n_iter=2, raw=True, l=opt.n_components*2)
+    # pickle_data, styles = torch.from_numpy(pickle_data), torch.from_numpy(styles)
 
     # Generate
-    random_style = styles[70, :]
-    examples = [random_style + (i-5) * 0.4 * components[0, :] for i in range(11)]
+    random_style = styles[0, :]
+    examples = [random_style + (i-5) * 0.4 * components[3, :] for i in range(11)]
     examples = [torch.unsqueeze(examples[i], dim=0) for i in range(len(examples))]
     examples = torch.cat(examples, dim=0).type(torch.FloatTensor).to(device)
     start = torch.unsqueeze(random_style, dim=0).to(device)
