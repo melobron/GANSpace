@@ -118,6 +118,7 @@ if __name__ == "__main__":
 
     start_img = generator.forward_from_style(start, step=step, alpha=opt.alpha, mean_style=mean_style, style_weight=opt.style_weight)
     example_imgs = generator.forward_from_style(examples, step=step, alpha=opt.alpha, mean_style=mean_style, style_weight=opt.style_weight)
+    print(start_img.shape)
 
     # Visualize
     mean, std = opt.mean, opt.std
